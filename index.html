@@ -490,24 +490,8 @@
         }
 
         // 方案 B: 整合 Uptime Kuma API - 简单版
-        // ========== 小白友好的配置说明 ==========
-        // Uptime Kuma 是一个免费的网站监控工具，可以帮你监控站点在线状态
-        // 
-        // 简单三步配置：
-        // 1. 到 demo.kuma.pet 注册账户（免费）
-        // 2. 添加你的站点监控，获得一个 monitor_id（例如：1, 2, 3...）
-        // 3. 在下面改这两个地方：
-        //    - KUMA_BASE_URL: 改成你的 Kuma 地址
-        //    - 在 sites.js 中，填入 uptime_kuma_id: "你的monitor_id"
-        //
-        // 就这么简单！
-        
         const KUMA_CONFIG = {
-            // 改这个为你自己的 Uptime Kuma 地址
-            // 公开演示: https://demo.kuma.pet
             baseUrl: "https://demo.kuma.pet",
-            
-            // 如果你用了公开演示，这个不需要改。如果自己部署，需要改成你自己的
             apiEndpoint: "/api/status-page/default"
         };
 
@@ -515,7 +499,6 @@
             if (!kumaId) return null;
 
             try {
-                // 请求 Kuma 的公开 API 获取监控状态
                 const url = `${KUMA_CONFIG.baseUrl}${KUMA_CONFIG.apiEndpoint}`;
                 const response = await fetch(url);
                 
@@ -523,12 +506,10 @@
                 
                 const data = await response.json();
                 
-                // 在返回的数据中查找对应的 monitor
                 if (data.monitors && Array.isArray(data.monitors)) {
                     const monitor = data.monitors.find(m => m.id == kumaId);
                     
                     if (monitor) {
-                        // status: 1 = up (在线)，0 = down (离线)
                         if (monitor.status === 1) {
                             return { 
                                 status: 'online', 
@@ -545,7 +526,7 @@
                 
                 return null;
             } catch (e) {
-                console.log('Kuma 检测失败（这不是错误，可能是跨域问题）');
+                console.log('Kuma 检测失败');
                 return null;
             }
         }
