@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 中转聚合站 - 汇总热门 API 中转服务</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-6xl">
+        <!-- 头部 -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">API 中转聚合站</h1>
+            <p class="text-gray-600 text-lg mb-8">汇总市面热门 API 中转服务，一站式快速查找</p>
+            
+            <!-- 搜索框 -->
+            <div class="relative mx-auto max-w-md">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="搜索模型或站点名称... (如 Claude, GPT-4, DeepSeek)"
+                    class="w-full px-6 py-3 rounded-full border-2 border-indigo-300 focus:border-indigo-500 outline-none text-sm"
+                >
+                <span class="absolute right-4 top-3 text-gray-400">🔍</span>
+            </div>
+        </div>
+
+        <!-- 筛选标签 -->
+        <div class="flex flex-wrap justify-center gap-2 mb-8">
+            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="all">
+                全部
+            </button>
+            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="claude">
+                Claude
+            </button>
+            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="gpt">
+                GPT-4
+            </button>
+            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="deepseek">
+                DeepSeek
+            </button>
+            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="stable">
+                稳定
+            </button>
+            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="free">
+                送额度
+            </button>
+        </div>
+
+        <!-- 卡片网格 -->
+        <div id="cardContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 卡片将通过 JS 动态生成 -->
+        </div>
+
+        <!-- 无结果提示 -->
+        <div id="emptyState" class="text-center py-12 hidden">
+            <p class="text-gray-500 text-lg">未找到匹配的中转站，请调整筛选条件</p>
+        </div>
+    </div>
+
+    <script>
+        const apiServices = [
+            {
+                name: "OpenRouter",
+                models: ["Claude", "GPT-4", "Gemini", "DeepSeek"],
+                tags: ["稳定", "多模型", "官方充值"],
+                url: "https://openrouter.ai",
+                color: "from-blue-500 to-blue-600"
+            },
+            {
+                name: "API2D",
+                models: ["GPT-4", "Claude"],
+                tags: ["稳定", "送额度", "快速"],
+                url: "https://api2d.com",
+                color: "from-purple-500 to-purple-600"
+            },
+            {
+                name: "OpenAI 官方",
+                models: ["GPT-4", "GPT-3.5"],
+                tags: ["官方", "最稳定"],
+                url: "https://openai.com",
+                color: "from-green-500 to-green-600"
+            },
+            {
+                name: "Anthropic 官方",
+                models: ["Claude"],
+                tags: ["官方", "最新版本"],
+                url: "https://console.anthropic.com",
+                color: "from-indigo-500 to-indigo-600"
+            },
+            {
+                name: "通义千问",
+                models: ["阿里通义"],
+                tags: ["国内", "稳定", "送额度"],
+                url: "https://dashscope.aliyun.com",
+                color: "from-orange-500 to-orange-600"
+            },
+            {
+                name: "智谱清言",
+                models: ["GLM-4"],
+                tags: ["国内", "送额度"],
+                url: "https://bigmodel.cn",
+                color: "from-pink-500 to-pink-600"
+            },
+            {
+                name: "腾讯云 API",
+                models: ["混元"],
+                tags: ["国内", "企业级"],
+                url: "https://cloud.tencent.com",
+                color: "from-red-500 to-red-600"
+            },
+            {
+                name: "百度千帆",
+                models: ["文心一言"],
+                tags: ["国内", "稳定"],
+                url: "https://cloud.baidu.com/product/wenxin",
+                color: "from-yellow-500 to-yellow-600"
+            },
+            {
+                name: "LlamaAPI",
+                models: ["Llama", "Mixtral"],
+                tags: ["开源模型", "快速"],
+                url: "https://www.llamaapi.com",
+                color: "from-cyan-500 to-cyan-600"
+            },
+            {
+                name: "Together AI",
+                models: ["DeepSeek", "Llama"],
+                tags: ["开源", "送额度"],
+                url: "https://www.together.ai",
+                color: "from-teal-500 to-teal-600"
+            },
+            {
+                name: "Groq API",
+                models: ["LLaMA"],
+                tags: ["超快", "免费"],
+                url: "https://console.groq.com",
+                color: "from-lime-500 to-lime-600"
+            },
+            {
+                name: "DeepSeek 官方",
+                models: ["DeepSeek"],
+                tags: ["官方", "便宜"],
+                url: "https://platform.deepseek.com",
+                color: "from-slate-600 to-slate-700"
+            }
+        ];
+
+        let allServices = apiServices;
+        let currentFilter = "all";
+
+        function renderCards(services = allServices) {
+            const container = document.getElementById('cardContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (services.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = services.map(service => `
+                <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
+                    <div class="bg-gradient-to-r ${service.color} h-24"></div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${service.name}</h3>
+                        
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 font-semibold mb-2">支持模型：</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${service.models.map(model => `
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                        ${model}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex flex-wrap gap-2">
+                                ${service.tags.map(tag => `
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                        ✓ ${tag}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <a href="${service.url}" target="_blank" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                            访问站点 →
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 初始化
+        renderCards();
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = allServices.filter(service => 
+                service.name.toLowerCase().includes(query) ||
+                service.models.some(m => m.toLowerCase().includes(query)) ||
+                service.tags.some(t => t.toLowerCase().includes(query))
+            );
+            renderCards(filtered);
+        });
+
+        // 筛选按钮
+        document.querySelectorAll('.filter-tag').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tag').forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white');
+                    b.classList.add('bg-gray-200', 'text-gray-800');
+                });
+                
+                btn.classList.remove('bg-gray-200', 'text-gray-800');
+                btn.classList.add('bg-indigo-600', 'text-white');
+                
+                const filter = btn.getAttribute('data-filter');
+                currentFilter = filter;
+
+                if (filter === 'all') {
+                    renderCards(allServices);
+                } else {
+                    const filtered = allServices.filter(service => 
+                        service.models.some(m => m.toLowerCase().includes(filter)) ||
+                        service.tags.some(t => t.toLowerCase().includes(filter))
+                    );
+                    renderCards(filtered);
+                }
+            });
+        });
+
+        // 初始化第一个按钮为选中状态
+        document.querySelector('[data-filter="all"]').classList.add('bg-indigo-600', 'text-white');
+        document.querySelectorAll('.filter-tag').forEach(b => {
+            if (!b.classList.contains('bg-indigo-600')) {
+                b.classList.add('bg-gray-200', 'text-gray-800');
+            }
+        });
+    </script>
+</body>
+</html>
