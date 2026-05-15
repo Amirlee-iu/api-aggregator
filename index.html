@@ -3,245 +3,613 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 中转聚合站 - 汇总热门 API 中转服务</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>私人API中转聚合站 - 低价 + 稳定性监控</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Microsoft YaHei', monospace;
+            background: linear-gradient(135deg, #d4a574 0%, #8b7355 50%, #5d4e37 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #3e2723;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 复古风格头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(139, 115, 85, 0.9);
+            border: 3px dashed #5d4e37;
+            padding: 30px;
+            position: relative;
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+            transform: skewY(-2deg);
+        }
+
+        .header h1 {
+            font-size: 48px;
+            color: #f5deb3;
+            text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: #ffe4b5;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #d2b48c;
+            color: #5d4e37;
+            padding: 8px 16px;
+            border: 2px solid #5d4e37;
+            margin: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* 搜索框 */
+        .search-wrapper {
+            max-width: 500px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-family: 'Courier New', monospace;
+            border: 3px solid #5d4e37;
+            background: #f5deb3;
+            color: #3e2723;
+            font-size: 16px;
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.4);
+            transform: translate(-2px, -2px);
+        }
+
+        /* 选项卡 */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            font-family: 'Courier New', monospace;
+            background: #c19a6b;
+            border: 3px solid #5d4e37;
+            color: #3e2723;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+        }
+
+        .tab-btn:hover {
+            background: #d2b48c;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-btn.active {
+            background: #8b4513;
+            color: #f5deb3;
+            box-shadow: inset 4px 4px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* 卡片网格 */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: #faf0e6;
+            border: 3px solid #8b7355;
+            padding: 20px;
+            position: relative;
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+            transform: rotate(-1deg);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: rotate(1deg) translateY(-5px);
+            box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #ffe4b5;
+            border-left: 4px solid #8b4513;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #00d084;
+            box-shadow: 0 0 8px #00d084;
+        }
+
+        .status-dot.offline {
+            background: #ff4757;
+            box-shadow: 0 0 8px #ff4757;
+        }
+
+        .status-dot.slow {
+            background: #ffa502;
+            box-shadow: 0 0 8px #ffa502;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.loading {
+            background: #9c88ff;
+            box-shadow: 0 0 8px #9c88ff;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .card-title {
+            font-size: 24px;
+            color: #5d4e37;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .card-price {
+            font-size: 18px;
+            color: #8b4513;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: #fff8dc;
+            padding: 10px;
+            border-left: 3px dashed #8b4513;
+        }
+
+        .card-models {
+            margin-bottom: 12px;
+        }
+
+        .card-models-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .model-tag {
+            display: inline-block;
+            background: #daa520;
+            color: white;
+            padding: 5px 10px;
+            margin: 3px;
+            font-size: 12px;
+            border: 1px solid #8b7355;
+        }
+
+        .features {
+            margin-bottom: 15px;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            background: #d2b48c;
+            color: #3e2723;
+            padding: 6px 12px;
+            margin: 4px;
+            font-size: 11px;
+            border: 1px solid #8b7355;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .card-owner {
+            font-size: 12px;
+            color: #8b7355;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .btn-visit {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #8b4513;
+            color: #f5deb3;
+            border: 2px solid #5d4e37;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-visit:hover {
+            background: #a0522d;
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
+            transform: translate(-2px, -2px);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #5d4e37;
+            font-size: 20px;
+        }
+
+        /* 底部风险声明 */
+        .risk-disclaimer {
+            background: #8b4513;
+            border: 3px dashed #f5deb3;
+            padding: 25px;
+            margin-top: 50px;
+            color: #f5deb3;
+            box-shadow: inset 0 0 0 2px #5d4e37;
+        }
+
+        .risk-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-content {
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .risk-item {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .risk-item:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        /* 官方站点分类 */
+        .section-title {
+            font-size: 28px;
+            color: #5d4e37;
+            margin: 40px 0 20px;
+            text-align: center;
+            text-decoration: underline;
+            text-decoration-style: dashed;
+        }
+
+        .official-label {
+            display: inline-block;
+            background: #2d5016;
+            color: #e8f5e9;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 2px;
+            margin-left: 10px;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-12 max-w-6xl">
+<body>
+    <div class="container">
         <!-- 头部 -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">API 中转聚合站</h1>
-            <p class="text-gray-600 text-lg mb-8">汇总市面热门 API 中转服务，一站式快速查找</p>
-            
-            <!-- 搜索框 -->
-            <div class="relative mx-auto max-w-md">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="搜索模型或站点名称... (如 Claude, GPT-4, DeepSeek)"
-                    class="w-full px-6 py-3 rounded-full border-2 border-indigo-300 focus:border-indigo-500 outline-none text-sm"
-                >
-                <span class="absolute right-4 top-3 text-gray-400">🔍</span>
-            </div>
+        <div class="header">
+            <h1>🚀 私人API中转聚合站</h1>
+            <p>低价优选 + 实时稳定性监控</p>
+            <span class="badge">💰 极低价格</span>
+            <span class="badge">📡 实时监控</span>
+            <span class="badge">⚠️ 风险提示</span>
         </div>
 
-        <!-- 筛选标签 -->
-        <div class="flex flex-wrap justify-center gap-2 mb-8">
-            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="all">
-                全部
+        <!-- 搜索框 -->
+        <div class="search-wrapper">
+            <input 
+                type="text" 
+                id="searchInput" 
+                class="search-input"
+                placeholder="搜索站点名称、模型... 如 Claude, GPT-4, DeepSeek"
+            >
+        </div>
+
+        <!-- 选项卡 -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="private">
+                🔒 私人中转站
             </button>
-            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="claude">
-                Claude
-            </button>
-            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="gpt">
-                GPT-4
-            </button>
-            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="deepseek">
-                DeepSeek
-            </button>
-            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="stable">
-                稳定
-            </button>
-            <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all" data-filter="free">
-                送额度
+            <button class="tab-btn" data-tab="official">
+                ✅ 官方站点
             </button>
         </div>
 
-        <!-- 卡片网格 -->
-        <div id="cardContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- 卡片将通过 JS 动态生成 -->
+        <!-- 私人中转站部分 -->
+        <div id="privateSection" class="tab-content">
+            <h2 class="section-title">🔒 私人中转站</h2>
+            <div id="privateCardsGrid" class="cards-grid"></div>
         </div>
 
-        <!-- 无结果提示 -->
-        <div id="emptyState" class="text-center py-12 hidden">
-            <p class="text-gray-500 text-lg">未找到匹配的中转站，请调整筛选条件</p>
+        <!-- 官方站点部分 -->
+        <div id="officialSection" class="tab-content" style="display: none;">
+            <h2 class="section-title">✅ 官方站点 <span class="official-label">可靠</span></h2>
+            <div id="officialCardsGrid" class="cards-grid"></div>
+        </div>
+
+        <!-- 无结果 -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            ❌ 未找到匹配的站点，请调整搜索条件
         </div>
     </div>
 
+    <!-- 底部风险声明 -->
+    <div class="risk-disclaimer">
+        <div class="risk-title">⚠️ 重要风险声明</div>
+        <div class="risk-content">
+            <div class="risk-item">
+                本站聚合的私人API中转站由个人或小团队运营，<strong>存在随时跑路的风险</strong>
+            </div>
+            <div class="risk-item">
+                建议：<strong>仅充值小额资金（50-200元）用于测试</strong>，不要大额充值
+            </div>
+            <div class="risk-item">
+                定期检查账户，及时提现余额。本站不对任何站点的关闭、跑路、数据泄露等问题负责
+            </div>
+            <div class="risk-item">
+                如需稳定服务，请优先使用官方API或大型正规中转服务
+            </div>
+            <div class="risk-item">
+                本站仅供参考，使用任何服务前请自行评估风险。使用即表示同意此声明
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载 sites.js 配置文件 -->
+    <script src="sites.js"></script>
+
     <script>
-        const apiServices = [
-            {
-                name: "OpenRouter",
-                models: ["Claude", "GPT-4", "Gemini", "DeepSeek"],
-                tags: ["稳定", "多模型", "官方充值"],
-                url: "https://openrouter.ai",
-                color: "from-blue-500 to-blue-600"
-            },
-            {
-                name: "API2D",
-                models: ["GPT-4", "Claude"],
-                tags: ["稳定", "送额度", "快速"],
-                url: "https://api2d.com",
-                color: "from-purple-500 to-purple-600"
-            },
-            {
-                name: "OpenAI 官方",
-                models: ["GPT-4", "GPT-3.5"],
-                tags: ["官方", "最稳定"],
-                url: "https://openai.com",
-                color: "from-green-500 to-green-600"
-            },
-            {
-                name: "Anthropic 官方",
-                models: ["Claude"],
-                tags: ["官方", "最新版本"],
-                url: "https://console.anthropic.com",
-                color: "from-indigo-500 to-indigo-600"
-            },
-            {
-                name: "通义千问",
-                models: ["阿里通义"],
-                tags: ["国内", "稳定", "送额度"],
-                url: "https://dashscope.aliyun.com",
-                color: "from-orange-500 to-orange-600"
-            },
-            {
-                name: "智谱清言",
-                models: ["GLM-4"],
-                tags: ["国内", "送额度"],
-                url: "https://bigmodel.cn",
-                color: "from-pink-500 to-pink-600"
-            },
-            {
-                name: "腾讯云 API",
-                models: ["混元"],
-                tags: ["国内", "企业级"],
-                url: "https://cloud.tencent.com",
-                color: "from-red-500 to-red-600"
-            },
-            {
-                name: "百度千帆",
-                models: ["文心一言"],
-                tags: ["国内", "稳定"],
-                url: "https://cloud.baidu.com/product/wenxin",
-                color: "from-yellow-500 to-yellow-600"
-            },
-            {
-                name: "LlamaAPI",
-                models: ["Llama", "Mixtral"],
-                tags: ["开源模型", "快速"],
-                url: "https://www.llamaapi.com",
-                color: "from-cyan-500 to-cyan-600"
-            },
-            {
-                name: "Together AI",
-                models: ["DeepSeek", "Llama"],
-                tags: ["开源", "送额度"],
-                url: "https://www.together.ai",
-                color: "from-teal-500 to-teal-600"
-            },
-            {
-                name: "Groq API",
-                models: ["LLaMA"],
-                tags: ["超快", "免费"],
-                url: "https://console.groq.com",
-                color: "from-lime-500 to-lime-600"
-            },
-            {
-                name: "DeepSeek 官方",
-                models: ["DeepSeek"],
-                tags: ["官方", "便宜"],
-                url: "https://platform.deepseek.com",
-                color: "from-slate-600 to-slate-700"
-            }
-        ];
-
-        let allServices = apiServices;
-        let currentFilter = "all";
-
-        function renderCards(services = allServices) {
-            const container = document.getElementById('cardContainer');
-            const emptyState = document.getElementById('emptyState');
-
-            if (services.length === 0) {
-                container.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                return;
+        // ============ 状态检测核心逻辑 ============
+        
+        // 方案 A: 简单的 HEAD/GET 请求检测（不需要后端）
+        async function checkSiteStatus(healthcheck_url, timeout = 5000) {
+            if (!healthcheck_url) {
+                return { status: 'unknown', message: '未配置检测' };
             }
 
-            emptyState.classList.add('hidden');
-            container.innerHTML = services.map(service => `
-                <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
-                    <div class="bg-gradient-to-r ${service.color} h-24"></div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">${service.name}</h3>
-                        
-                        <div class="mb-4">
-                            <p class="text-sm text-gray-600 font-semibold mb-2">支持模型：</p>
-                            <div class="flex flex-wrap gap-2">
-                                ${service.models.map(model => `
-                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                                        ${model}
-                                    </span>
-                                `).join('')}
-                            </div>
-                        </div>
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-                        <div class="mb-6">
-                            <div class="flex flex-wrap gap-2">
-                                ${service.tags.map(tag => `
-                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                                        ✓ ${tag}
-                                    </span>
-                                `).join('')}
-                            </div>
-                        </div>
+                // 使用 HEAD 请求进行轻量检测，跨域问题用 no-cors
+                const response = await fetch(healthcheck_url, {
+                    method: 'GET',
+                    mode: 'no-cors',
+                    signal: controller.signal
+                });
 
-                        <a href="${service.url}" target="_blank" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            访问站点 →
-                        </a>
-                    </div>
-                </div>
-            `).join('');
+                clearTimeout(timeoutId);
+
+                // no-cors 模式下状态码可能不可用，用响应来判断
+                if (response.ok || response.status === 0) {
+                    return { 
+                        status: 'online', 
+                        message: '🟢 在线',
+                        latency: 'fast'
+                    };
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return { 
+                        status: 'slow', 
+                        message: '🟡 延迟高或超时',
+                        latency: 'slow'
+                    };
+                }
+                return { 
+                    status: 'offline', 
+                    message: '🔴 离线',
+                    latency: 'dead'
+                };
+            }
+
+            return { 
+                status: 'offline', 
+                message: '🔴 离线',
+                latency: 'dead'
+            };
         }
 
-        // 初始化
-        renderCards();
+        // 方案 B: 整合 Uptime Kuma API（如果配置了）
+        // Uptime Kuma 公开 API: https://kuma.example.com/api/status-page/your-status-page-slug
+        async function checkWithUptimeKuma(kuma_id) {
+            // 这里需要你配置自己的 Uptime Kuma 实例 URL
+            const KUMA_API_URL = "https://kuma.example.com/api/public/";
+            
+            if (!kuma_id) return null;
+
+            try {
+                const response = await fetch(`${KUMA_API_URL}${kuma_id}`);
+                const data = await response.json();
+                
+                if (data.status === 'up') {
+                    return { status: 'online', message: '🟢 在线' };
+                } else if (data.status === 'down') {
+                    return { status: 'offline', message: '🔴 离线' };
+                } else {
+                    return { status: 'slow', message: '🟡 延迟高' };
+                }
+            } catch (e) {
+                console.error('Uptime Kuma 检测失败:', e);
+                return null;
+            }
+        }
+
+        // 渲染卡片
+        function renderCard(site, isOfficial = false) {
+            return `
+                <div class="card">
+                    <div class="status-indicator" id="status-${site.id}">
+                        <span class="status-dot loading"></span>
+                        <span>检测中...</span>
+                    </div>
+
+                    <div class="card-title">${site.name}</div>
+                    
+                    ${site.price ? `<div class="card-price">💵 ${site.price}</div>` : ''}
+                    
+                    <div class="card-owner">运营方: ${site.owner}</div>
+
+                    <div class="card-models">
+                        <div class="card-models-label">支持模型:</div>
+                        ${site.models.map(m => `<span class="model-tag">${m}</span>`).join('')}
+                    </div>
+
+                    <div class="features">
+                        ${site.features.map(f => `<span class="feature-tag">✓ ${f}</span>`).join('')}
+                    </div>
+
+                    <button class="btn-visit" onclick="window.open('${site.url}', '_blank')">
+                        → 访问站点
+                    </button>
+                </div>
+            `;
+        }
+
+        // 初始化并渲染所有卡片
+        function initializeCards() {
+            const privateGrid = document.getElementById('privateCardsGrid');
+            const officialGrid = document.getElementById('officialCardsGrid');
+
+            // 渲染私人站点
+            privateGrid.innerHTML = sites.map(site => renderCard(site)).join('');
+
+            // 渲染官方站点
+            officialGrid.innerHTML = official_sites.map(site => renderCard(site, true)).join('');
+
+            // 启动状态检测（仅私人站点）
+            sites.forEach(site => {
+                monitorSiteStatus(site);
+            });
+        }
+
+        // 监控单个站点状态并更新 UI
+        async function monitorSiteStatus(site) {
+            const statusEl = document.getElementById(`status-${site.id}`);
+            if (!statusEl) return;
+
+            // 方案 B：优先使用 Uptime Kuma
+            let result = null;
+            if (site.uptime_kuma_id) {
+                result = await checkWithUptimeKuma(site.uptime_kuma_id);
+            }
+
+            // 方案 A：回退到简单检测
+            if (!result && site.healthcheck_url) {
+                result = await checkSiteStatus(site.healthcheck_url);
+            }
+
+            if (result) {
+                const statusDot = statusEl.querySelector('.status-dot');
+                const statusText = statusEl.querySelector('span:last-child');
+
+                statusDot.className = `status-dot ${result.status}`;
+                statusText.textContent = result.message;
+
+                // 每 30 秒重新检测一次
+                setTimeout(() => monitorSiteStatus(site), 30000);
+            }
+        }
 
         // 搜索功能
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
-            const filtered = allServices.filter(service => 
-                service.name.toLowerCase().includes(query) ||
-                service.models.some(m => m.toLowerCase().includes(query)) ||
-                service.tags.some(t => t.toLowerCase().includes(query))
+            const allSites = [...sites, ...official_sites];
+            
+            const filtered = allSites.filter(site =>
+                site.name.toLowerCase().includes(query) ||
+                (site.models && site.models.some(m => m.toLowerCase().includes(query))) ||
+                (site.features && site.features.some(f => f.toLowerCase().includes(query)))
             );
-            renderCards(filtered);
+
+            if (filtered.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('privateCardsGrid').innerHTML = '';
+                document.getElementById('officialCardsGrid').innerHTML = '';
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+                
+                const privateFiltered = filtered.filter(s => sites.find(p => p.id === s.id));
+                const officialFiltered = filtered.filter(s => official_sites.find(o => o.id === s.id));
+
+                document.getElementById('privateCardsGrid').innerHTML = privateFiltered.map(s => renderCard(s)).join('');
+                document.getElementById('officialCardsGrid').innerHTML = officialFiltered.map(s => renderCard(s, true)).join('');
+            }
         });
 
-        // 筛选按钮
-        document.querySelectorAll('.filter-tag').forEach(btn => {
+        // 选项卡切换
+        document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-tag').forEach(b => {
-                    b.classList.remove('bg-indigo-600', 'text-white');
-                    b.classList.add('bg-gray-200', 'text-gray-800');
-                });
-                
-                btn.classList.remove('bg-gray-200', 'text-gray-800');
-                btn.classList.add('bg-indigo-600', 'text-white');
-                
-                const filter = btn.getAttribute('data-filter');
-                currentFilter = filter;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
 
-                if (filter === 'all') {
-                    renderCards(allServices);
+                btn.classList.add('active');
+                const tab = btn.getAttribute('data-tab');
+                
+                if (tab === 'private') {
+                    document.getElementById('privateSection').style.display = 'block';
                 } else {
-                    const filtered = allServices.filter(service => 
-                        service.models.some(m => m.toLowerCase().includes(filter)) ||
-                        service.tags.some(t => t.toLowerCase().includes(filter))
-                    );
-                    renderCards(filtered);
+                    document.getElementById('officialSection').style.display = 'block';
                 }
             });
         });
 
-        // 初始化第一个按钮为选中状态
-        document.querySelector('[data-filter="all"]').classList.add('bg-indigo-600', 'text-white');
-        document.querySelectorAll('.filter-tag').forEach(b => {
-            if (!b.classList.contains('bg-indigo-600')) {
-                b.classList.add('bg-gray-200', 'text-gray-800');
-            }
-        });
+        // 页面加载完成后初始化
+        window.addEventListener('load', initializeCards);
     </script>
 </body>
 </html>
